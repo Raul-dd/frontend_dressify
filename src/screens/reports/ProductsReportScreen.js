@@ -6,31 +6,65 @@ import FilterBox from '../../components/FilterBox';
 
 export default function ProductsReportScreen() {
     const [products, setProducts] = useState([]);
-    //const [categoriesCount, setCategoriesCount] = useState([]); // Nuevo estado
+    
+    // Función para normalizar la categoría
+    const getProductCategory = (product) => {
+        if (product.category) {
+            return {
+                id: product.category.id,
+                name: product.category.name
+            };
+        }
+        if (product.category_id) {
+            return {
+                id: product.category_id,
+                name: product.category_id // Usamos el ID como nombre temporal
+            };
+        }
+        return {
+            id: 'uncategorized',
+            name: 'Sin categoría'
+        };
+    };
+
+    // Conteo de categorías mejorado
     const categoriesCount = Object.values(
-        products.reduce((acc, product) => {
-            const catId = product.category?.id || 'uncategorized';
-            const catName = product.category?.name || 'Sin catalogar';
-            if (!acc[catId]) {
-            acc[catId] = { category_id: catId, category_name: catName, product_count: 0 };
+        (Array.isArray(products) ? products : []).reduce((acc, product) => {
+            const category = getProductCategory(product);
+            
+            if (!acc[category.id]) {
+                acc[category.id] = { 
+                    category_id: category.id, 
+                    category_name: category.name, 
+                    product_count: 0 
+                };
             }
-            acc[catId].product_count += 1;
+            acc[category.id].product_count += 1;
             return acc;
         }, {})
     );
 
     const [selectedCategory, setSelectedCategory] = useState(null);
 
-  useEffect(() => {
-    API.get('/products')
-        .then(res => setProducts(res.data.data))
-        .catch(err => console.error(err));
+    useEffect(() => {
+        API.get('/products')
+            .then(res => {
+                const productsData = Array.isArray(res.data) 
+                    ? res.data 
+                    : Array.isArray(res.data?.data) 
+                        ? res.data.data 
+                        : [];
+                setProducts(productsData);
+            })
+            .catch(err => console.error(err));
     }, []);
 
     const totalProducts = products.length;
-    const mostRecentProduct = products.reduce((latest, current) => {
-    return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
-    }, products[0] || null);
+    const mostRecentProduct = (products.length > 0) 
+        ? products.reduce((latest, current) => {
+            return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+        }, products[0])
+        : null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -82,31 +116,36 @@ export default function ProductsReportScreen() {
         </View>
 
         <View style={styles.productsDetailContainer}>
-          <Text style={styles.subtitle}>Lista de productos</Text>
-            {products
-                .filter(product => {
-                    if (!selectedCategory) return true;
-                    if (selectedCategory.category_id === 'uncategorized') {
-                    // Solo productos sin categoría asignada
-                    return !product.category;
-                    }
-                    // Productos con la categoría seleccionada
-                    return product.category?.id === selectedCategory.category_id;
-                })
-                .map(product => (
-                    <View key={product.id} style={[styles.equalContainer3, styles.unitContainerProduct]}>
-                    <View style={styles.textLeft}>
-                        <Text style={styles.productNameDetail}>{product.name}</Text>
-                        <Text style={styles.categoryNameDetail}>Categoria: {product.category?.name ?? 'Sin categoría'}</Text>
-                        <Text style={styles.stockNameDetail}>Stock: {product.stock} piezas</Text>
-                    </View>
-                    <View style={styles.textRight}>
-                        <Text style={styles.codDetail}>Código único:{"\n"}{product.code}</Text>
-                        <Text style={styles.priceDetail}>${Number(product.price).toFixed(2)}</Text>
-                    </View>
-                </View>
-            ))}
-        </View>
+                <Text style={styles.subtitle}>Lista de productos</Text>
+                {products
+                    .filter(product => {
+                        if (!selectedCategory) return true;
+                        const productCategory = getProductCategory(product);
+                        
+                        if (selectedCategory.category_id === 'uncategorized') {
+                            return productCategory.id === 'uncategorized';
+                        }
+                        return productCategory.id === selectedCategory.category_id;
+                    })
+                    .map(product => {
+                        const category = getProductCategory(product);
+                        return (
+                            <View key={product.id} style={[styles.equalContainer3, styles.unitContainerProduct]}>
+                                <View style={styles.textLeft}>
+                                    <Text style={styles.productNameDetail}>{product.name}</Text>
+                                    <Text style={styles.categoryNameDetail}>
+                                        Categoría: {category.name}
+                                    </Text>
+                                    <Text style={styles.stockNameDetail}>Stock: {product.stock} piezas</Text>
+                                </View>
+                                <View style={styles.textRight}>
+                                    <Text style={styles.codDetail}>Código único:{"\n"}{product.code}</Text>
+                                    <Text style={styles.priceDetail}>${Number(product.price).toFixed(2)}</Text>
+                                </View>
+                            </View>
+                        );
+                    })}
+            </View>
       </ScrollView>
 
     </SafeAreaView>

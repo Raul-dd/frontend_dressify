@@ -11,10 +11,20 @@ export default function HomeReportScreen() {
     const fetchData = async () => {
         try {
         const productsResponse = await API.get('/products');
-        setProducts(productsResponse.data.data);
+        setProducts(
+          Array.isArray(productsResponse.data) 
+            ? productsResponse.data
+            : Array.isArray(productsResponse.data.data)
+              ? productsResponse.data.data
+              : []
+        );
         
         const accountsResponse = await API.get('/accounts');
-        setUsers(accountsResponse.data.data.data);
+        setUsers(
+          Array.isArray(accountsResponse.data.data?.data)
+            ? accountsResponse.data.data.data
+            : []
+        );
 
         const salesResponse = await API.get('/sales');
         setSales(salesResponse.data.data);
@@ -87,7 +97,7 @@ export default function HomeReportScreen() {
             <Text style={styles.totalText}>Ventas de este mes</Text>
           </View>
           <View style={[styles.equalContainer,styles.productContainer]}>
-            <Text style={styles.productName}>{users.length}</Text>
+            <Text style={styles.productName}>{users?.length ?? 0}</Text>
             <Text style={styles.productTag}>Numero de usuarios</Text>
           </View>
         </View>

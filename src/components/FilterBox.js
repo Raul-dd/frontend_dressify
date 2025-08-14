@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 
 const FilterBox = ({ categories, onSelectCategory, selectedCategory, placeholder = 'Categoría' }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,32 +35,38 @@ const FilterBox = ({ categories, onSelectCategory, selectedCategory, placeholder
                 onPress={() => setModalVisible(false)}
               />
               <View style={styles.dropdownMenu}>
-                {([{category_id: null, category_name: placeholder}, ...categories]).map((item, idx) =>
-    idx === 0 ? (
-      <View
-        key="header"
-        style={[styles.categoryItem, { backgroundColor: '#f0f0f0' }]}
-      >
-        <Text style={[styles.categoryItemText, { color: '#999', fontWeight: 'bold' }]}>
-          {item.category_name}
-        </Text>
-      </View>
-    ) : (
-      <TouchableOpacity
-        key={item.category_id ?? 'all'}
-        style={[
-          styles.categoryItem,
-          selectedCategory?.category_id === item.category_id && styles.selectedCategoryItem
-        ]}
-        onPress={() => {
-          onSelectCategory(item.category_id ? item : null);
-          setModalVisible(false);
-        }}
-      >
-        <Text style={styles.categoryItemText}>{item.category_name}</Text>
-      </TouchableOpacity>
-    )
-  )}
+                <ScrollView 
+                  nestedScrollEnabled={true}
+                  style={styles.scrollContainer}
+                  contentContainerStyle={styles.scrollContent}
+                >
+                  {([{category_id: null, category_name: placeholder}, ...categories]).map((item, idx) =>
+                    idx === 0 ? (
+                      <View
+                        key="header"
+                        style={[styles.categoryItem, { backgroundColor: '#f0f0f0' }]}
+                      >
+                        <Text style={[styles.categoryItemText, { color: '#999', fontWeight: 'bold' }]}>
+                          {item.category_name}
+                        </Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        key={item.category_id ?? 'all'}
+                        style={[
+                          styles.categoryItem,
+                          selectedCategory?.category_id === item.category_id && styles.selectedCategoryItem
+                        ]}
+                        onPress={() => {
+                          onSelectCategory(item.category_id ? item : null);
+                          setModalVisible(false);
+                        }}
+                      >
+                        <Text style={styles.categoryItemText}>{item.category_name}</Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                </ScrollView>
               </View>
             </View>
           )}
@@ -87,9 +93,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     zIndex: 999,
   },
+  scrollContainer: {
+    maxHeight: 200, // Ajusta según necesites
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   dropdownMenu: {
     position: 'absolute',
-    top: 40, // ajusta según el alto del dropdown
+    top: 40,
     left: 0,
     right: 0,
     backgroundColor: '#fff',
@@ -98,11 +110,11 @@ const styles = StyleSheet.create({
     borderColor: '#cccccc',
     zIndex: 1000,
     elevation: 10,
-    maxHeight: 200,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
+    // Quitar maxHeight del dropdownMenu ya que lo maneja el ScrollView
   },
   filterTitle: {
     fontSize: 16,
