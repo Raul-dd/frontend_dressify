@@ -1,7 +1,8 @@
 // src/screens/sales/Main.js
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons'; // Importamos los iconos
 
 // Importa las pantallas
 import HistorialSaleScreen from './HistorialSaleScreen';
@@ -9,17 +10,14 @@ import RegisterSaleScreen from './RegisterSaleScreen';
 import EditSaleScreen from './EditSaleScreen';
 import ProfileScreen from '../admin/ProfileScreen';
 
-// Iconos personalizados
-const IconVentas  = () => <Text>🧾</Text>;
-const IconPerfil  = () => <Text>👤</Text>;
-
 export default function Main() {
   const [currentScreen, setCurrentScreen] = useState('ventas');
   const [editSaleId, setEditSaleId] = useState(null);
 
   const menuItems = [
-    { id: 'ventas', label: 'Ventas', icon: IconVentas },
-    { id: 'perfil', label: 'Perfil', icon: IconPerfil },
+    // Ahora usamos el nombre del icono de MaterialIcons
+    { id: 'ventas', label: 'Ventas', iconName: 'receipt-long' },
+    { id: 'perfil', label: 'Perfil', iconName: 'person-outline' },
   ];
 
   const renderScreen = () => {
@@ -46,33 +44,32 @@ export default function Main() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top','bottom']}>
-      <StatusBar translucent backgroundColor="#fff" barStyle="dark-content" />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar translucent backgroundColor="#f9fafb" barStyle="dark-content" />
 
       {/* Contenido dinámico */}
       <View style={styles.content}>
         {renderScreen()}
       </View>
 
-      {/* Barra inferior personalizada */}
+      {/* Barra inferior rediseñada */}
       <View style={styles.navigation}>
         {menuItems.map((item) => {
           const isActive = currentScreen === item.id;
-          const Icon = item.icon;
           return (
             <TouchableOpacity
               key={item.id}
               onPress={() => setCurrentScreen(item.id)}
               style={styles.navItem}
             >
-              <View style={[styles.navButtonContainer, isActive && styles.activeNavButtonContainer]}>
-                <View style={styles.iconWrapper}>
-                  <Icon />
-                </View>
-                <Text style={[styles.navText, isActive && styles.navTextActive]}>
-                  {item.label}
-                </Text>
-              </View>
+              <MaterialIcons 
+                name={item.iconName} 
+                size={26} 
+                color={isActive ? styles.activeColor.color : styles.inactiveColor.color}
+              />
+              <Text style={[styles.navText, isActive && styles.navTextActive]}>
+                {item.label}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -81,44 +78,41 @@ export default function Main() {
   );
 }
 
+// ==================== ESTILOS MEJORADOS ====================
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: '#f9fafb' },
   content: { flex: 1 },
   navigation: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 20,
-    paddingHorizontal: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#AFAFAF',
-    backgroundColor: '#fff',
-    height: 90,
-    
+    backgroundColor: '#ffffff',
+    height: 70, // Altura más estándar
+    paddingBottom: Platform.OS === 'ios' ? 20 : 0, // Espacio extra para iPhone
+    // Sombra para el efecto flotante
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
-    maxWidth: '50%', // Solo 2 iconos ahora
-    
-    
-    
+    justifyContent: 'center',
   },
-  navButtonContainer: {
-    alignItems: 'center',
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    width: '100%',
-    maxWidth: '100%',
-    borderRadius: 20
+  navText: {
+    fontSize: 12,
+    color: '#6b7280', // Color inactivo (gris)
+    marginTop: 4,
   },
-  activeNavButtonContainer: {
-    backgroundColor: '#E6E6E6',
+  navTextActive: {
+    color: '#111827', // Color activo (oscuro)
+    fontWeight: '600',
   },
-  iconWrapper: { marginBottom: 4 },
-  navText: { fontSize: 12, color: '#000' },
-  navTextActive: { fontWeight: 'bold' }
+  // Creamos objetos de estilo para los colores para que sean fáciles de cambiar
+  activeColor: {
+    color: '#111827', // Color primario oscuro
+  },
+  inactiveColor: {
+    color: '#9ca3af', // Color secundario gris
+  },
 });
